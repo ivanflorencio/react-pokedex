@@ -1,32 +1,34 @@
-import { useEffect, useState } from 'react';
-import './App.css';
+import { useEffect, useState } from "react";
+import "./App.css";
+import Pokemon from "./Pokemon";
+import { fetchPokemon } from "./api/PokemonApi";
+
+window.onscroll = () => {
+	if (window.innerHeight + window.scrollY >= document.body.scrollHeight) {
+		// you're at the bottom of the page
+		console.log("Bottom of page");
+	}
+};
 
 function App() {
+	const [pokemonList, setPokemonList] = useState([]);
+	const [page, setPage] = useState(1);
 
-  const [pokemonList, setPokemonList] = useState([]);
-  const [page, setPage] = useState(1);
+	useEffect(() => {
+		(async () => {
+			let newList = await fetchPokemon(page);
+			setPokemonList((list) => [...list, ...newList]);
+		})();
+	}, [page]);
 
-  useEffect(()=>{
-    async function fetchPokemon () {
-      let list = await fetch(`https://pokeapi.co/api/v2/pokemon/?limit=20&offset=${page-1}`).then(res=>res.json());
-      let infos = list.results.map((item)=>{
-        return fetch(item.url);
-      })
-      let inf = await Promise.all(infos).then(async(res)=>res.map(r=> r.json()));
-      console.log(inf)
-      setPokemonList(l => [...l, ...list.results]);
-    }
-    fetchPokemon();
-  },[page])
-
-
-
-  return (
-    <div className="App">
-      {JSON.stringify(pokemonList)}
-      <button onClick={()=>setPage(p=>p+1)}>Next</button>
-    </div>
-  );
+	return (
+		<div className="App">
+			{pokemonList.map((p) => (
+				<Pokemon info={p} />
+			))}
+			<button onClick={() => setPage((p) => p + 1)}>Next</button>
+		</div>
+	);
 }
 
 export default App;
